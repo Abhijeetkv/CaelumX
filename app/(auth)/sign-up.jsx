@@ -3,6 +3,7 @@ import { Text, TextInput, TouchableOpacity, View, Image, StyleSheet } from 'reac
 import { useSignUp } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
 import { COLORS } from '../../constants/colors'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -11,8 +12,8 @@ export default function SignUpScreen() {
   // State
   const [emailAddress, setEmailAddress] = React.useState('')
   const [password, setPassword] = React.useState('')
-  const [firstname, setFirstname] = React.useState('')
-  const [lastname, setLastname] = React.useState('')
+  // --- MODIFIED ---: Replaced firstname and lastname with fullName
+  const [fullName, setFullName] = React.useState('') 
   const [pendingVerification, setPendingVerification] = React.useState(false)
   const [code, setCode] = React.useState('')
   const [error, setError] = React.useState('')
@@ -49,10 +50,15 @@ export default function SignUpScreen() {
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId })
 
-        // ✅ Update Clerk profile with first + last name
+        // --- MODIFIED ---: Split fullName into firstName and lastName for Clerk
+        const nameParts = fullName.trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
+        // ✅ Update Clerk profile with the split names
         await signUpAttempt.user.update({
-          firstName: firstname,
-          lastName: lastname,
+          firstName: firstName,
+          lastName: lastName,
         })
 
         router.replace('/')
@@ -94,24 +100,23 @@ export default function SignUpScreen() {
     <View style={{backgroundColor:COLORS.background}}>
       <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
     </View>
-    <View style={styles.container}>
-       
+    <KeyboardAwareScrollView
+      contentContainerStyle={{flexGrow:1}} 
+      enableOnAndroid={true}
+      enableAutomaticScroll={true}
+      style={styles.container}>
       <Text style={styles.title}>Create an Account</Text>
 
+      {/* --- MODIFIED ---: Replaced two name inputs with one */}
       <TextInput
         autoCapitalize="words"
-        value={firstname}
-        placeholder="First name"
+        value={fullName}
+        placeholder="Full name"
         style={styles.input}
-        onChangeText={setFirstname}
+        onChangeText={setFullName}
       />
-      <TextInput
-        autoCapitalize="words"
-        value={lastname}
-        placeholder="Last name"
-        style={styles.input}
-        onChangeText={setLastname}
-      />
+      {/* --- REMOVED ---: Last name input is no longer needed */}
+
       <TextInput
         autoCapitalize="none"
         value={emailAddress}
@@ -140,7 +145,7 @@ export default function SignUpScreen() {
           </TouchableOpacity>
         </Link>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
     </>
   )
 }
@@ -151,6 +156,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    paddingTop:50,
     backgroundColor: COLORS.background
   },
   varification: {

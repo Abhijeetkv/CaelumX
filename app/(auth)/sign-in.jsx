@@ -10,6 +10,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import { COLORS } from '../../constants/colors'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export default function UserLogin() {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -31,7 +32,7 @@ export default function UserLogin() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId })
-        router.replace('/home') // redirect to /home after login
+        router.replace('/') // redirect to /home after login
       } else {
         console.error(JSON.stringify(signInAttempt, null, 2))
         setError('Login requires additional steps.')
@@ -47,72 +48,81 @@ export default function UserLogin() {
 
   return (
     <>
-    
-    <View style={styles.container}>
-      <View>
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+      >
+        <View>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+          />
+          {/* Error Message */}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-        />
-        {/* Error Message */}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* Email */}
+          <Text style={styles.label}>What's your email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="email@example.com"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
 
-        {/* Email */}
-        <Text style={styles.label}>What's your email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="email@example.com"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
+          {/* Password */}
+          <Text style={[styles.label, { marginTop: 12 }]}>Enter Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        {/* Password */}
-        <Text style={[styles.label, { marginTop: 12 }]}>Enter Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+          {/* Login Button */}
+          <TouchableOpacity style={styles.button} onPress={submitHandler}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
 
-        {/* Login Button */}
-        <TouchableOpacity style={styles.button} onPress={submitHandler}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.centerText}>
-          New here?{' '}
-          <Link href="/sign-up">
-            <Text style={styles.link}>Create new Account</Text>
-          </Link>
-        </Text>
-      </View>
-
-    </View>
+          <Text style={styles.centerText}>
+            New here?{' '}
+            <Link href="/sign-up">
+              <Text style={styles.link}>Create new Account</Text>
+            </Link>
+          </Text>
+        </View>
+      </KeyboardAwareScrollView>
     </>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    // Styles for the ScrollView's outer frame
     flex: 1,
     padding: 28,
-    justifyContent: 'center',
-    backgroundColor: COLORS.background
+    backgroundColor: COLORS.background,
+  },
+  contentContainer: {
+    // Styles for the content INSIDE the ScrollView
+    flexGrow: 1, // Ensures the container can grow to fill the available space
+    justifyContent: 'center', // This correctly centers the content vertically
   },
   logo: {
     width: 64,
     height: 64,
     resizeMode: 'contain',
-    marginBottom:20
+    marginBottom: 20,
+    alignSelf: 'center', // Good for centering the logo itself
   },
   error: {
     color: 'red',
     marginBottom: 8,
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
