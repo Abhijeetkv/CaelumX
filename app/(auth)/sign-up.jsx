@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Text, TextInput, TouchableOpacity, View, Image, StyleSheet } from 'react-native'
 import { useSignUp } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
+import { COLORS } from '../../constants/colors'
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -67,10 +68,10 @@ export default function SignUpScreen() {
   // This is the view for when the user needs to verify their email
   if (pendingVerification) {
     return (
-      <View style={styles.container}>
+      <View style={styles.varification}>
         <Image
             source={require('../../assets/images/logo.png')}
-            style={styles.logo}
+            style={styles.logo1}
         />
         <Text style={styles.title}>Verify your email</Text>
         <TextInput
@@ -90,7 +91,9 @@ export default function SignUpScreen() {
   // This is the initial sign-up form view
   return (
     <>
-    <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+    <View style={{backgroundColor:COLORS.background}}>
+      <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
+    </View>
     <View style={styles.container}>
        
       <Text style={styles.title}>Create an Account</Text>
@@ -148,7 +151,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: COLORS.background
   },
+  varification: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: COLORS.background
+  },
+  logo1:{
+    width: 80,
+    height: 80,
+    margin:24,
+    alignSelf: 'center',
+    marginBottom:30
+  },
+
   logo: {
     width: 80,
     height: 80,

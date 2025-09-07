@@ -9,6 +9,7 @@ import {
   Image,
   StyleSheet,
 } from 'react-native'
+import { COLORS } from '../../constants/colors'
 
 export default function UserLogin() {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 28,
     justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.background
   },
   logo: {
     width: 64,
