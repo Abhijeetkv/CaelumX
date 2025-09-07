@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from "react-native";
 import { SignOutButton } from "@/components/SignOutButton";
 import UploadImagesScreen from "@/components/UploadImagesScreen"; // ✅ import
 import AddProject from "@/components/AddProject"; // ✅ import
+import HomeScreen from "../../components/HomeScreen"; // ✅ import
 
 export default function Page() {
   const { user } = useUser();
@@ -22,7 +23,8 @@ export default function Page() {
         </View>
         {/* Show UploadImagesScreen instead of just Hello */}
         {/* <UploadImagesScreen /> */}
-        <AddProject />
+        {/* <AddProject /> */}
+        <HomeScreen />
       </SignedIn>
 
       <SignedOut>
