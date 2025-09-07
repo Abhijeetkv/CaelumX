@@ -15,12 +15,12 @@ export default function Page() {
         
 
         {/* Optional: still show user + sign out */}
-        <View style={styles.userInfo}>
+        {/* <View style={styles.userInfo}>
           <Text style={styles.greeting}>
             Hello {user?.emailAddresses[0].emailAddress}
           </Text>
           <SignOutButton />
-        </View>
+        </View> */}
         {/* Show UploadImagesScreen instead of just Hello */}
         {/* <UploadImagesScreen /> */}
         {/* <AddProject /> */}
