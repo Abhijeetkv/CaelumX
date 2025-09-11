@@ -17,6 +17,9 @@ import { SafeAreaView as SafeAreaViewContext } from 'react-native-safe-area-cont
 import { MaterialIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from "expo-image-picker";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { Link } from "expo-router";
+import { SignOutButton } from "@/components/SignOutButton";
 
 // --- A simple constant for colors ---
 const COLORS = {
@@ -207,90 +210,102 @@ const HomeScreen = ({ projects }) => {
 
 // --- NEW Profile Screen Component ---
 const ProfileScreen = ({ onNavigate }) => {
-    return (
-        <SafeAreaViewContext style={profileStyles.container} edges={['top']}>
-            {/* Header */}
-            <View style={profileStyles.header}>
-                <TouchableOpacity style={profileStyles.backButton} onPress={() => onNavigate('Home')}>
-                    <MaterialIcons name="arrow-back" size={24} color="#374151" />
-                </TouchableOpacity>
-                <Text style={profileStyles.headerTitle}>Profile</Text>
-                <View style={{ width: 40 }} /> {/* placeholder for right */}
+  const { user } = useUser();
+
+  return (
+    <SafeAreaView style={profileStyles.container} edges={["top"]}>
+      {/* Header */}
+      <View style={profileStyles.header}>
+        <TouchableOpacity
+          style={profileStyles.backButton}
+          onPress={() => onNavigate("Home")}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="#374151" />
+        </TouchableOpacity>
+        <Text style={profileStyles.headerTitle}>Profile</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={profileStyles.content}>
+        {/* ---------- Signed In ---------- */}
+        <SignedIn>
+          {/* Profile Avatar */}
+          <View style={profileStyles.avatarContainer}>
+            <Image
+              source={{
+                uri:
+                  user?.imageUrl ||
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+              }}
+              style={profileStyles.avatar}
+            />
+            <Text style={profileStyles.name}>
+              {user?.fullName || "Anonymous User"}
+            </Text>
+
+            {/* Email */}
+            <View style={profileStyles.infoRow}>
+              <MaterialIcons name="email" size={16} color="#6B7280" />
+              <Text style={profileStyles.infoText}>
+                {user?.emailAddresses?.[0]?.emailAddress || "No email"}
+              </Text>
             </View>
 
-            <ScrollView contentContainerStyle={profileStyles.content}>
-                {/* Profile Avatar */}
-                <View style={profileStyles.avatarContainer}>
-                    <Image
-                        source={{
-                            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuAo3YByqBbfx7GIV5JMfe36fTIITIdPZXlmyW1WMFHRxMX6jBPOf6otr-efh27bf5BEhZ9aewtpr-e9T90tQonrhvnA_EwPCEZrlvATb7zgwyr0p9slEiHRa0--KAd_OqgAKO6UNzorbMDssM2iKEQcGHZfBWXx7IEWrraKlu0rzJPhWorCHsfbex2f3lMWz65RkyyUpGyEwvMB6jrDT3bkFK-Der1VKzj8NDiPzMcttCrFyUMs-n0z921pZsJ3CPcMQrRCbCc0h5M"
-                        }}
-                        style={profileStyles.avatar}
-                    />
-                    <Text style={profileStyles.name}>Ocean Conservation Initiative</Text>
-                    <View style={profileStyles.infoRow}>
-                        <MaterialIcons name="location-on" size={16} color="#6B7280" />
-                        <Text style={profileStyles.infoText}>San Diego, CA</Text>
-                    </View>
-                    <View style={profileStyles.infoRow}>
-                        <MaterialIcons name="layers" size={16} color="#6B7280" />
-                        <Text style={profileStyles.infoText}>4 Projects</Text>
-                    </View>
-                </View>
-
-                {/* Wallet Section */}
-                <View style={profileStyles.walletCard}>
-                    <Text style={profileStyles.cardTitle}>Wallet</Text>
-
-                    {/* Wallet Address */}
-                    <View style={profileStyles.walletRow}>
-                        <View style={[profileStyles.walletIcon, { backgroundColor: '#1E88E5' }]}>
-                            <MaterialIcons name="wallet" size={24} color="white" />
-                        </View>
-                        <View style={profileStyles.walletTextContainer}>
-                            <Text style={profileStyles.walletLabel}>Wallet Address</Text>
-                            <Text style={profileStyles.walletValue}>0x123...456</Text>
-                        </View>
-                        <TouchableOpacity>
-                            <MaterialIcons name="content-copy" size={20} color="#6B7280" />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={profileStyles.divider} />
-
-                    {/* Total Carbon Credits */}
-                    <View style={profileStyles.walletRow}>
-                        <View style={[profileStyles.walletIcon, { backgroundColor: '#43A047' }]}>
-                            <MaterialIcons name="eco" size={24} color="white" />
-                        </View>
-                        <View style={profileStyles.walletTextContainer}>
-                            <Text style={profileStyles.walletLabel}>Total Carbon Credits</Text>
-                            <Text style={profileStyles.carbonCredits}>1,234</Text>
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
-
-            {/* Note: This footer is part of the ProfileScreen component. 
-                The main app footer will be hidden underneath it.
-                I've wired its buttons to the app's navigation. */}
-            <View style={profileStyles.footer}>
-                <TouchableOpacity style={profileStyles.footerItem} onPress={() => onNavigate('Home')}>
-                    <MaterialIcons name="home" size={24} color="#6B7280" />
-                    <Text style={profileStyles.footerText}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={profileStyles.footerItem} onPress={() => onNavigate('Home')}>
-                    <MaterialIcons name="list-alt" size={24} color="#6B7280" />
-                    <Text style={profileStyles.footerText}>Projects</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={profileStyles.footerItem}>
-                    <MaterialIcons name="person" size={24} color="#1E88E5" />
-                    <Text style={[profileStyles.footerText, { color: '#1E88E5' }]}>Profile</Text>
-                </TouchableOpacity>
+            {/* Example: Projects count */}
+            <View style={profileStyles.infoRow}>
+              <MaterialIcons name="layers" size={16} color="#6B7280" />
+              <Text style={profileStyles.infoText}>4 Projects</Text>
             </View>
-        </SafeAreaViewContext>
-    );
-}
+          </View>
+
+          {/* Wallet Section */}
+          <View style={profileStyles.walletCard}>
+            <Text style={profileStyles.cardTitle}>Wallet</Text>
+
+            {/* Wallet Address */}
+            <View style={profileStyles.walletRow}>
+              <View
+                style={[profileStyles.walletIcon, { backgroundColor: "#1E88E5" }]}
+              >
+                <MaterialIcons name="wallet" size={24} color="white" />
+              </View>
+              <View style={profileStyles.walletTextContainer}>
+                <Text style={profileStyles.walletLabel}>Wallet Address</Text>
+                <Text style={profileStyles.walletValue}>0x123...456</Text>
+              </View>
+              <TouchableOpacity>
+                <MaterialIcons name="content-copy" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={profileStyles.divider} />
+
+            {/* Total Carbon Credits */}
+            <View style={profileStyles.walletRow}>
+              <View
+                style={[profileStyles.walletIcon, { backgroundColor: "#43A047" }]}
+              >
+                <MaterialIcons name="eco" size={24} color="white" />
+              </View>
+              <View style={profileStyles.walletTextContainer}>
+                <Text style={profileStyles.walletLabel}>
+                  Total Carbon Credits
+                </Text>
+                <Text style={profileStyles.carbonCredits}>1,234</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Sign Out */}
+          <View style={{ marginTop: 20, alignItems: "center", color: "black", backgroundColor: "#1E88E5", borderColor: "#1E88E5", borderWidth: 1, borderRadius: 50, paddingVertical: 10, paddingHorizontal: 40 }}>
+            <SignOutButton />
+          </View>
+        </SignedIn>
+
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 // --- Main App Component ---
 export default function App() {

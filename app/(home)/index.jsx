@@ -1,10 +1,7 @@
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { Link } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
-import { SignOutButton } from "@/components/SignOutButton";
-import UploadImagesScreen from "@/components/UploadImagesScreen"; // ✅ import
-import AddProject from "@/components/AddProject"; // ✅ import
-import HomeScreen from "../../components/HomeScreen"; // ✅ import
+import HomeScreen from "../../pages/HomeScreen"; // ✅ import
 
 export default function Page() {
   const { user } = useUser();
@@ -21,9 +18,7 @@ export default function Page() {
           </Text>
           <SignOutButton />
         </View> */}
-        {/* Show UploadImagesScreen instead of just Hello */}
-        {/* <UploadImagesScreen /> */}
-        {/* <AddProject /> */}
+        
         <HomeScreen />
       </SignedIn>
 
