@@ -1,187 +1,98 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
-import { Datepicker } from "@ui-kitten/components";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useState } from 'react';
+import { View, Alert } from 'react-native';
+import ProjectFormScreen from '../pages/HomeScreen'; // Assuming in separate file
+import UploadImagesScreen from '../pages/HomeScreen'; // Assuming in separate file
 
-export default function ProjectFormScreen() {
-  const router = useRouter();
+const AddNewProject = ({ onSubmissionComplete }) => {
+    const [step, setStep] = useState(1);
+    const [projectData, setProjectData] = useState(null);
 
-  const [form, setForm] = useState({
-    name: "",
-    location: "",
-    area: "",
-    type: "",
-    date_planted: new Date(),
-  });
-
-  const handleChange = (key, value) => {
-    setForm({ ...form, [key]: value });
-  };
-
-  const handleNext = () => {
-    // Format date only when submitting
-    const formattedForm = {
-      ...form,
-      date_planted: form.date_planted.toISOString().split("T")[0], // YYYY-MM-DD
+    // 1. Receives data from the first screen and proceeds to the next step
+    const handleNextStep = (data) => {
+        setProjectData(data);
+        setStep(2);
     };
 
-    console.log("Form data:", formattedForm);
-    router.push("/home");
-  };
+    // 2. Navigates back to the previous step
+    const handleGoBack = () => {
+        setStep(1);
+    };
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#475569" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Project</Text>
-        <View style={{ width: 28 }} />
-      </View>
+    // 3. The final submission logic
+    const handleFinalSubmit = async (images) => {
+        // Combine data from step 1 and images from step 2
+        if (!projectData || images.length === 0) {
+            Alert.alert("Missing Information", "Please ensure all fields are filled and at least one image is uploaded.");
+            return;
+        }
 
-      {/* Form */}
-      <ScrollView contentContainerStyle={styles.form}>
-        {/* Project Name */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Project Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter project name"
-            value={form.name}
-            onChangeText={(t) => handleChange("name", t)}
-          />
+        const formData = new FormData();
+
+        // Append project details (text data)
+        Object.keys(projectData).forEach(key => {
+            formData.append(key, projectData[key]);
+        });
+
+        // Append images
+        images.forEach((uri) => {
+            const fileName = uri.split('/').pop();
+            const fileType = fileName.split('.').pop();
+            
+            formData.append('images', {
+                uri,
+                name: fileName,
+                type: `image/${fileType}`,
+            });
+        });
+        
+        console.log("Submitting FormData to backend...");
+
+        try {
+            // Send to backend and get the full project object back
+            const res = await fetch("http://10.0.2.2:5000/projects", {
+                method: "POST",
+                body: formData,
+                // NOTE: Do NOT set 'Content-Type': 'multipart/form-data'.
+                // React Native's fetch will automatically set it with the correct boundary.
+            });
+            
+            if (!res.ok) {
+                 // Handle server-side errors
+                throw new Error(`Server responded with status: ${res.status}`);
+            }
+
+            const savedProject = await res.json();
+            console.log("Project saved successfully:", savedProject);
+            Alert.alert("Success", "Your project has been submitted!");
+            
+            // Optional: callback to parent to close modal or navigate
+            if (onSubmissionComplete) {
+                onSubmissionComplete(savedProject);
+            }
+
+        } catch (error) {
+            console.error("Error saving project:", error);
+            Alert.alert("Error", "Failed to save project. Please try again.");
+        }
+    };
+
+    // Render the correct screen based on the current step
+    return (
+        <View style={{ flex: 1 }}>
+            {step === 1 && (
+                <ProjectFormScreen 
+                    onNext={handleNextStep} 
+                    onBack={() => console.log("Cannot go back from step 1")} // Or handle navigation
+                />
+            )}
+            {step === 2 && (
+                <UploadImagesScreen 
+                    onFormSubmit={handleFinalSubmit} 
+                    onBack={handleGoBack} 
+                />
+            )}
         </View>
+    );
+};
 
-        {/* Location */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Location</Text>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={[styles.input, { paddingRight: 40 }]}
-              placeholder="Enter location or pick on map"
-              value={form.location}
-              onChangeText={(t) => handleChange("location", t)}
-            />
-            <MaterialIcons
-              name="location-on"
-              size={20}
-              color="#94a3b8"
-              style={styles.iconRight}
-            />
-          </View>
-        </View>
-
-        {/* Area */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Area (hectares)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter area"
-            keyboardType="numeric"
-            value={form.area}
-            onChangeText={(t) => handleChange("area", t)}
-          />
-        </View>
-
-        {/* Type (Dropdown) */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Type</Text>
-          <View style={styles.dropdown}>
-            <Picker
-              selectedValue={form.type}
-              onValueChange={(value) => handleChange("type", value)}
-            >
-              <Picker.Item label="Select type" value="" />
-              <Picker.Item label="Mangroves" value="mangroves" />
-              <Picker.Item label="Seagrass" value="seagrass" />
-              <Picker.Item label="Saltmarsh" value="saltmarsh" />
-            </Picker>
-          </View>
-        </View>
-
-        {/* Date Planted (UI Kitten Datepicker) */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Date Planted</Text>
-          <Datepicker
-            date={form.date_planted}
-            onSelect={(nextDate) => handleChange("date_planted", nextDate)}
-            placeholder="Pick a date"
-          />
-        </View>
-      </ScrollView>
-
-      {/* Next button */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1e293b",
-  },
-  form: { padding: 16, gap: 16 },
-  field: { gap: 6 },
-  label: { fontSize: 14, fontWeight: "500", color: "#334155" },
-  input: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: "#1e293b",
-  },
-  inputWrapper: { position: "relative" },
-  iconRight: {
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    marginTop: -10,
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
-    backgroundColor: "#f8fafc",
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fff",
-  },
-  button: {
-    backgroundColor: "#1E88E5",
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-});
+export default AddNewProject;

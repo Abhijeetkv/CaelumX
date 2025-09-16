@@ -17,18 +17,19 @@ import { SafeAreaView as SafeAreaViewContext } from 'react-native-safe-area-cont
 import { MaterialIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from "expo-image-picker";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
+import { SignedIn, useUser } from "@clerk/clerk-expo";
 import { SignOutButton } from "@/components/SignOutButton";
+
 
 // --- A simple constant for colors ---
 const COLORS = {
     background: '#F9FAFB',
 };
 
-// --- Data for the projects ---
+// // --- Data for the projects ---
 const initialProjects = [
     {
+        _id: '1',
         title: "Coastal Mangrove Restoration",
         location: "Philippines",
         area: "100 acres / Mangrove",
@@ -36,6 +37,7 @@ const initialProjects = [
         images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuAIlWzdAUTdOmG3mXYm4Wkq9IvvuU9BA7NPYREB2NSisqXDjRkC3nGV0NFlDOxa_-8leXRqAUXBJGge9bGUQgaJpxSdzjY7rUm9Ldtj8ObHrqDJ0fhk_FzlzLLHVXDoMBE8NiGJCcw6kP5nWM9kr_K9nS5JcJ7lvRTJqigRewcHBswYEn9pEN52XGqLEN74CvTGaJ-YnWyGfpGctoS23-xAhAvmKy9788CRPYoY_Xo6o9dDPEWOFbY7D3d36r-6yIWzFKD3bCOZL8Q"]
     },
     {
+        _id: '2',
         title: "Seagrass Bed Restoration",
         location: "Indonesia",
         area: "50 acres / Seagrass",
@@ -43,6 +45,7 @@ const initialProjects = [
         images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuACZ7qhr_t7Thurhm7biyFBh4POQJpIYQ0N_4encrO1BbRKp3nv1Qr0tPde3uf1UEOvUV2OUWhCfSH9aS2_aflgjIhf7HGKuPG_n3bykgtaXOUyiLQdkdaqzOLkzi5JExDehrr5_-i2HxCXL8cGGeyIxV5oFi-GZxchO4oSBbjV8sXMVAGZdR-hwAaIQNbYfwlXz35BxxTD1ZcOWpMmNkcf2j6vaSiNSz94BI6xtUMKPbllgASASkHp559hz5PldrVH1AodC6DSXaw"]
     },
     {
+        _id: '3',
         title: "Coral Reef Restoration",
         location: "Fiji",
         area: "20 acres / Coral Reef",
@@ -72,8 +75,10 @@ const ProjectFormScreen = ({ onNext, onBack }) => {
         title: "",
         location: "",
         area: "",
-        type: "mangroves",
-        planted: new Date(),
+        type: "MANGROVE",
+        planted: "2025-09-13",
+        ngoId : 1,
+        name : 'Green World'
     });
 
     const handleChange = (key, value) => {
@@ -81,14 +86,19 @@ const ProjectFormScreen = ({ onNext, onBack }) => {
     };
 
     const handleNext = () => {
+        // Basic validation
+        if (!form.title || !form.location || !form.area) {
+            Alert.alert("Missing Fields", "Please fill in all the required fields.");
+            return;
+        }
         const projectDetails = {
             ...form,
-            planted: form.planted.toISOString().split("T")[0],
-            area: `${form.area} acres / ${form.type.charAt(0).toUpperCase() + form.type.slice(1)}`,
+            // Format the area string before passing it to the next step
+            area: `${form.area} acres / ${form.type.charAt(0).toUpperCase() + form.type.slice(1).toLowerCase()}`,
         };
         onNext(projectDetails);
     };
-
+    
     return (
         <View style={styles.formContainer}>
             <View style={styles.formHeader}>
@@ -104,17 +114,16 @@ const ProjectFormScreen = ({ onNext, onBack }) => {
                     <Text style={styles.label}>Type</Text>
                     <View style={styles.dropdown}>
                         <Picker selectedValue={form.type} onValueChange={(itemValue) => handleChange("type", itemValue)}>
-                            <Picker.Item label="Mangroves" value="mangroves" />
-                            <Picker.Item label="Seagrass" value="seagrass" />
-                            <Picker.Item label="Saltmarsh" value="saltmarsh" />
+                            <Picker.Item label="MANGROVE" value="MANGROVE" />
+                            <Picker.Item label="SEAGRASS" value="SEAGRASS" />
+                            <Picker.Item label="SALTMARSH" value="SALTMARSH" />
                         </Picker>
                     </View>
                 </View>
                 <View style={styles.field}>
                     <Text style={styles.label}>Date Planted</Text>
-                    {/* Note: A real app would use a date picker modal library here */}
-                    <TouchableOpacity onPress={() => Alert.alert("Date Picker", "A date picker would be shown here.")}>
-                        <Text style={styles.input}>{form.planted.toLocaleDateString()}</Text>
+                    <TouchableOpacity onPress={() => Alert.alert("Date Picker", "A real app would use a date picker modal library here.")}>
+                        <Text style={styles.input}>{form.planted}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -203,161 +212,206 @@ const HomeScreen = ({ projects }) => {
         <ScrollView style={styles.main}>
             <Text style={styles.title}>My Projects</Text>
             <View style={styles.searchContainer}><MaterialIcons name="search" size={20} color="#6B7280" /><TextInput style={styles.searchInput} placeholder="Search projects..." value={searchQuery} onChangeText={setSearchQuery} /></View>
-            {filteredProjects.map((project, index) => <ProjectCard key={index} project={project} />)}
+            {filteredProjects.map((project) => <ProjectCard key={project._id} project={project} />)}
         </ScrollView>
     );
 };
 
-// --- NEW Profile Screen Component ---
 const ProfileScreen = ({ onNavigate }) => {
   const { user } = useUser();
 
   return (
-    <SafeAreaView style={profileStyles.container} edges={["top"]}>
-      {/* Header */}
+    <SafeAreaViewContext style={profileStyles.container} edges={["top"]}>
       <View style={profileStyles.header}>
-        <TouchableOpacity
-          style={profileStyles.backButton}
-          onPress={() => onNavigate("Home")}
-        >
+        <TouchableOpacity style={profileStyles.backButton} onPress={() => onNavigate("Home")}>
           <MaterialIcons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
         <Text style={profileStyles.headerTitle}>Profile</Text>
         <View style={{ width: 40 }} />
       </View>
-
       <ScrollView contentContainerStyle={profileStyles.content}>
-        {/* ---------- Signed In ---------- */}
         <SignedIn>
-          {/* Profile Avatar */}
           <View style={profileStyles.avatarContainer}>
-            <Image
-              source={{
-                uri:
-                  user?.imageUrl ||
-                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-              }}
-              style={profileStyles.avatar}
-            />
-            <Text style={profileStyles.name}>
-              {user?.fullName || "Anonymous User"}
-            </Text>
-
-            {/* Email */}
-            <View style={profileStyles.infoRow}>
-              <MaterialIcons name="email" size={16} color="#6B7280" />
-              <Text style={profileStyles.infoText}>
-                {user?.emailAddresses?.[0]?.emailAddress || "No email"}
-              </Text>
-            </View>
-
-            {/* Example: Projects count */}
-            <View style={profileStyles.infoRow}>
-              <MaterialIcons name="layers" size={16} color="#6B7280" />
-              <Text style={profileStyles.infoText}>4 Projects</Text>
-            </View>
+            <Image source={{ uri: user?.imageUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }} style={profileStyles.avatar} />
+            <Text style={profileStyles.name}>{user?.fullName || "Anonymous User"}</Text>
+            <View style={profileStyles.infoRow}><MaterialIcons name="email" size={16} color="#6B7280" /><Text style={profileStyles.infoText}>{user?.emailAddresses?.[0]?.emailAddress || "No email"}</Text></View>
+            <View style={profileStyles.infoRow}><MaterialIcons name="layers" size={16} color="#6B7280" /><Text style={profileStyles.infoText}>4 Projects</Text></View>
           </View>
-
-          {/* Wallet Section */}
           <View style={profileStyles.walletCard}>
             <Text style={profileStyles.cardTitle}>Wallet</Text>
-
-            {/* Wallet Address */}
             <View style={profileStyles.walletRow}>
-              <View
-                style={[profileStyles.walletIcon, { backgroundColor: "#1E88E5" }]}
-              >
-                <MaterialIcons name="wallet" size={24} color="white" />
-              </View>
-              <View style={profileStyles.walletTextContainer}>
-                <Text style={profileStyles.walletLabel}>Wallet Address</Text>
-                <Text style={profileStyles.walletValue}>0x123...456</Text>
-              </View>
-              <TouchableOpacity>
-                <MaterialIcons name="content-copy" size={20} color="#6B7280" />
-              </TouchableOpacity>
+              <View style={[profileStyles.walletIcon, { backgroundColor: "#1E88E5" }]}><MaterialIcons name="wallet" size={24} color="white" /></View>
+              <View style={profileStyles.walletTextContainer}><Text style={profileStyles.walletLabel}>Wallet Address</Text><Text style={profileStyles.walletValue}>0x123...456</Text></View>
+              <TouchableOpacity><MaterialIcons name="content-copy" size={20} color="#6B7280" /></TouchableOpacity>
             </View>
-
             <View style={profileStyles.divider} />
-
-            {/* Total Carbon Credits */}
             <View style={profileStyles.walletRow}>
-              <View
-                style={[profileStyles.walletIcon, { backgroundColor: "#43A047" }]}
-              >
-                <MaterialIcons name="eco" size={24} color="white" />
-              </View>
-              <View style={profileStyles.walletTextContainer}>
-                <Text style={profileStyles.walletLabel}>
-                  Total Carbon Credits
-                </Text>
-                <Text style={profileStyles.carbonCredits}>1,234</Text>
-              </View>
+              <View style={[profileStyles.walletIcon, { backgroundColor: "#43A047" }]}><MaterialIcons name="eco" size={24} color="white" /></View>
+              <View style={profileStyles.walletTextContainer}><Text style={profileStyles.walletLabel}>Total Carbon Credits</Text><Text style={profileStyles.carbonCredits}>1,234</Text></View>
             </View>
           </View>
-
-          {/* Sign Out */}
           <View style={{ marginTop: 20, alignItems: "center", color: "black", backgroundColor: "#1E88E5", borderColor: "#1E88E5", borderWidth: 1, borderRadius: 50, paddingVertical: 10, paddingHorizontal: 40 }}>
             <SignOutButton />
           </View>
         </SignedIn>
-
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaViewContext>
   );
 };
+
+// --- Component to manage the Add Project flow ---
+const AddNewProjectFlow = ({ onSubmissionComplete, onCancel }) => {
+    const [step, setStep] = useState(1);
+    const [projectData, setProjectData] = useState(null);
+
+    const handleNextStep = (data) => {
+        setProjectData(data);
+        setStep(2);
+    };
+
+    const handleGoBack = () => {
+        setStep(1);
+    };
+
+    const handleFinalSubmit = async (images) => {
+        if (!projectData || images.length === 0) {
+            Alert.alert("Missing Information", "Please ensure all fields are filled and at least one image is uploaded.");
+            return;
+        }
+
+        const formData = new FormData();
+        Object.keys(projectData).forEach(key => formData.append(key, projectData[key]));
+
+        images.forEach((uri) => {
+            const fileName = uri.split('/').pop();
+            const fileType = fileName.split('.').pop();
+            formData.append('files', {
+                uri,
+                name: fileName,
+                type: `image/${fileType}`,
+            });
+        });
+        
+        console.log("Submitting FormData to backend...");
+
+        try {
+            const res = await fetch("https://9647fc34027d.ngrok-free.app/project/upload", {
+                method: "POST",
+                body: formData,
+            });
+            
+            if (!res.ok) {
+                throw new Error(`Server responded with status: ${res.status}`);
+            }
+
+            const savedProject = await res.json();
+            console.log("Project saved successfully:", savedProject);
+            Alert.alert("Success", "Your project has been submitted!");
+            
+            if (onSubmissionComplete) {
+                onSubmissionComplete(savedProject);
+            }
+
+        } catch (error) {
+            console.error("Error saving project:", error);
+            Alert.alert("Error", "Failed to save project. Please try again.");
+        }
+    };
+
+    if (step === 1) {
+        return <ProjectFormScreen onNext={handleNextStep} onBack={onCancel} />;
+    }
+    
+    if (step === 2) {
+        return <UploadImagesScreen onFormSubmit={handleFinalSubmit} onBack={handleGoBack} />;
+    }
+
+    return null; // Should not happen
+};
+
 
 // --- Main App Component ---
 export default function App() {
     const [activeScreen, setActiveScreen] = useState('Home');
     const [projects, setProjects] = useState(initialProjects);
-    const [newProjectData, setNewProjectData] = useState(null);
 
-    const handleFormStep1 = (formData) => {
-        setNewProjectData(formData);
-        setActiveScreen('UploadImages');
-    };
+    // ✅ FIXED: This function now transforms the server response to match the frontend's data structure
+    const handleSubmissionComplete = (savedProject) => {
+        // Guard against an unexpected server response
+        if (!savedProject || !savedProject.project) {
+            console.error("Received an invalid project object from the server.");
+            return;
+        }
 
-    const handleFinalSubmit = (images) => {
-        const finalProject = {
-            ...newProjectData,
-            images: images.length > 0 ? images : ["https://placehold.co/600x400/e2e8f0/e2e8f0?text=No%20Image"],
+        // Transform the server response to match the frontend's expected data structure
+        const newProject = {
+            _id: savedProject.project.id.toString(), // Map 'id' to '_id' and ensure it's a string for the key
+            title: savedProject.project.name,        // Map 'name' to 'title'
+            location: savedProject.project.location,
+            // Recreate the formatted area string
+            area: `${savedProject.project.area} acres / ${savedProject.project.type.charAt(0) + savedProject.project.type.slice(1).toLowerCase()}`,
+            planted: savedProject.project.date_planted.split("T")[0], // Format the date
+            // Use the gateway URLs for images, with a fallback
+            images: savedProject.gateway && savedProject.gateway.length > 0 ? savedProject.gateway : ["https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png"],
         };
-        setProjects(prevProjects => [finalProject, ...prevProjects]);
-        setNewProjectData(null);
+        
+        setProjects(prevProjects => [newProject, ...prevProjects]);
         setActiveScreen('Home');
     };
 
     const renderScreen = () => {
         switch (activeScreen) {
-            case 'AddProjectForm': return <ProjectFormScreen onNext={handleFormStep1} onBack={() => setActiveScreen('Home')} />;
-            case 'UploadImages': return <UploadImagesScreen onFormSubmit={handleFinalSubmit} onBack={() => setActiveScreen('AddProjectForm')} />;
-            case 'Profile': return <ProfileScreen onNavigate={setActiveScreen} />;
-            default: return <HomeScreen projects={projects} />;
+            case 'AddNewProject': 
+                return <AddNewProjectFlow 
+                    onSubmissionComplete={handleSubmissionComplete}
+                    onCancel={() => setActiveScreen('Home')} 
+                />;
+            case 'Profile': 
+                return <ProfileScreen onNavigate={setActiveScreen} />;
+            default: 
+                return <HomeScreen projects={projects} />;
         }
     };
 
-    const isProfileScreenActive = activeScreen === 'Profile';
+    const isFormOrProfileActive = activeScreen === 'Profile' || activeScreen === 'AddNewProject';
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
             
-            {/* We hide the main app header if the profile screen (with its own header) is active */}
-            {!isProfileScreenActive && (
-                 <View style={styles.header}><MaterialIcons name="waves" size={32} color="#1E88E5" /><View style={styles.wallet}><MaterialIcons name="account-balance-wallet" size={20} color="#43A047" /><Text style={styles.walletText}>1200 CC</Text></View></View>
+            {!isFormOrProfileActive && (
+                 <View style={styles.header}>
+                    <Image
+                        source={require('../assets/images/logo.png')}
+                        style={{width:40, height: 40, paddingRight:16, resizeMode: 'contain' }}
+                        />
+                     <View style={styles.wallet}>
+                         <MaterialIcons name="account-balance-wallet" size={20} color="#43A047" />
+                         <Text style={styles.walletText}>1200 CC</Text>
+                     </View>
+                 </View>
             )}
 
             <View style={{flex: 1}}>
                 {renderScreen()}
             </View>
             
-            {/* We hide the main app footer if the profile screen (with its own footer) is active */}
-            {!isProfileScreenActive && (
+            {!isFormOrProfileActive && (
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('Home')}><MaterialIcons name="home" size={24} color={activeScreen === 'Home' ? "#1E88E5" : "#6B7280"} /><Text style={activeScreen === 'Home' ? styles.footerTextActive : styles.footerText}>Home</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('AddProjectForm')}><MaterialIcons name="add" size={24} color={activeScreen.startsWith('AddProject') || activeScreen === 'UploadImages' ? "#1E88E5" : "#6B7280"} /><Text style={activeScreen.startsWith('AddProject') || activeScreen === 'UploadImages' ? styles.footerTextActive : styles.footerText}>Add Project</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('Profile')}><MaterialIcons name="person" size={24} color={activeScreen === 'Profile' ? "#1E88E5" : "#6B7280"} /><Text style={activeScreen === 'Profile' ? styles.footerTextActive : styles.footerText}>Profile</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('Home')}>
+                        <MaterialIcons name="home" size={24} color={activeScreen === 'Home' ? "#1E88E5" : "#6B7280"} />
+                        <Text style={activeScreen === 'Home' ? styles.footerTextActive : styles.footerText}>Home</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('AddNewProject')}>
+                        <MaterialIcons name="add" size={24} color={activeScreen === 'AddNewProject' ? "#1E88E5" : "#6B7280"} />
+                        <Text style={activeScreen === 'AddNewProject' ? styles.footerTextActive : styles.footerText}>Add Project</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.footerItem} onPress={() => setActiveScreen('Profile')}>
+                        <MaterialIcons name="person" size={24} color={activeScreen === 'Profile' ? "#1E88E5" : "#6B7280"} />
+                        <Text style={activeScreen === 'Profile' ? styles.footerTextActive : styles.footerText}>Profile</Text>
+                    </TouchableOpacity>
                 </View>
             )}
         </SafeAreaView>
@@ -379,7 +433,7 @@ const styles = StyleSheet.create({
     footerTextActive: { fontSize: 12, fontWeight: '600', color: '#1E88E5' },
     
     // Project List
-    searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 12, marginVertical: 16, borderWidth: 1, borderColor: '#E5E7EB', gap: 8 },
+    searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 12, paddingHorizontal: 12, marginVertical: 16, borderWidth: 1, borderColor: '#E5E7EB', gap: 8 },
     searchInput: { flex: 1, height: 44, fontSize: 16, color: '#111827' },
     card: { marginBottom: 24, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, overflow: 'hidden', backgroundColor: 'white', shadowColor: '#1F2937', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
     image: { width: '100%', height: 180, resizeMode: 'cover' },
@@ -528,25 +582,5 @@ const profileStyles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#43A047',
-    },
-    footer: {
-        flexDirection: 'row',
-        borderTopWidth: 1,
-        borderTopColor: '#E5E7EB',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        justifyContent: 'space-around',
-        alignItems: 'center',
-    },
-    footerItem: {
-        alignItems: 'center',
-        padding: 8,
-    },
-    footerText: {
-        fontSize: 12,
-        fontWeight: '500',
-        color: '#6B7280',
-        marginTop: 2,
     },
 });
