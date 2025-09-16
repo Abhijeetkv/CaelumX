@@ -76,7 +76,7 @@ const ProjectFormScreen = ({ onNext, onBack }) => {
         location: "",
         area: "",
         type: "MANGROVE",
-        planted: "2025-09-13",
+        planted: "2023-01-01",
         ngoId : 1,
         name : 'Green World'
     });
@@ -295,7 +295,7 @@ const AddNewProjectFlow = ({ onSubmissionComplete, onCancel }) => {
         console.log("Submitting FormData to backend...");
 
         try {
-            const res = await fetch("https://9647fc34027d.ngrok-free.app/project/upload", {
+            const res = await fetch("https://3865d801ec27.ngrok-free.app/project/upload", {
                 method: "POST",
                 body: formData,
             });
