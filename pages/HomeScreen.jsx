@@ -295,7 +295,7 @@ const AddNewProjectFlow = ({ onSubmissionComplete, onCancel }) => {
         console.log("Submitting FormData to backend...");
 
         try {
-            const res = await fetch("https://3865d801ec27.ngrok-free.app/project/upload", {
+            const res = await fetch("https://804ba576f111.ngrok-free.app/project/upload", {
                 method: "POST",
                 body: formData,
             });
